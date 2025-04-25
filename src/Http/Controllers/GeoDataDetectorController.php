@@ -27,7 +27,7 @@ class GeoDataDetectorController extends SettingController
             return $this->httpResponse();
         }
 
-        $ip = Helper::getIpFromThirdParty();
+        $ip = request()->ip();
 
         $url = "https://api.ipdata.co/{$ip}?api-key={$apiKey}";
 
