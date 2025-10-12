@@ -5,7 +5,6 @@ namespace FriendsOfBotble\GeoDataDetector\Http\Controllers;
 use Botble\Base\Facades\AdminHelper;
 use Botble\Base\Facades\BaseHelper;
 use Botble\Base\Http\Responses\BaseHttpResponse;
-use Botble\Base\Supports\Helper;
 use Botble\Base\Supports\Language;
 use Botble\Language\Facades\Language as LanguageFacade;
 use Botble\Setting\Http\Controllers\SettingController;

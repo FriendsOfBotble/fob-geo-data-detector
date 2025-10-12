@@ -2,10 +2,10 @@
 
 namespace FriendsOfBotble\GeoDataDetector\Http\Controllers\Settings;
 
-use FriendsOfBotble\GeoDataDetector\Forms\Settings\GeoDataDetectorSettingForm;
-use FriendsOfBotble\GeoDataDetector\Http\Requests\Settings\GeoDataDetectorSettingRequest;
 use Botble\Base\Http\Responses\BaseHttpResponse;
 use Botble\Setting\Http\Controllers\SettingController;
+use FriendsOfBotble\GeoDataDetector\Forms\Settings\GeoDataDetectorSettingForm;
+use FriendsOfBotble\GeoDataDetector\Http\Requests\Settings\GeoDataDetectorSettingRequest;
 
 class GeoDataDetectorSettingController extends SettingController
 {

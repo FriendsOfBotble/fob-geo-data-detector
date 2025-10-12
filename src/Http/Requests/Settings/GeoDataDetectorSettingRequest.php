@@ -10,10 +10,10 @@ class GeoDataDetectorSettingRequest extends Request
     public function rules(): array
     {
         return [
-            'fob_geo_data_detector_enabled' => new OnOffRule(),
+            'fob_geo_data_detector_enabled' => [new OnOffRule()],
             'fob_geo_data_detector_ipdata_api_key' => ['required', 'string', 'size:56'],
-            'fob_geo_data_currency_detector_enabled' => new OnOffRule(),
-            'fob_geo_data_language_detector_enabled' => new OnOffRule(),
+            'fob_geo_data_currency_detector_enabled' => [new OnOffRule()],
+            'fob_geo_data_language_detector_enabled' => [new OnOffRule()],
         ];
     }
 

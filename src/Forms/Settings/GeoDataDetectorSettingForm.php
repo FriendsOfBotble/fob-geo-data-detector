@@ -2,12 +2,12 @@
 
 namespace FriendsOfBotble\GeoDataDetector\Forms\Settings;
 
-use Botble\Base\Forms\FieldOptions\TextFieldOption;
-use Botble\Base\Forms\Fields\TextField;
-use FriendsOfBotble\GeoDataDetector\Http\Requests\Settings\GeoDataDetectorSettingRequest;
 use Botble\Base\Forms\FieldOptions\CheckboxFieldOption;
+use Botble\Base\Forms\FieldOptions\TextFieldOption;
 use Botble\Base\Forms\Fields\OnOffCheckboxField;
+use Botble\Base\Forms\Fields\TextField;
 use Botble\Setting\Forms\SettingForm;
+use FriendsOfBotble\GeoDataDetector\Http\Requests\Settings\GeoDataDetectorSettingRequest;
 
 class GeoDataDetectorSettingForm extends SettingForm
 {

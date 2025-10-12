@@ -43,7 +43,7 @@ class GeoDataDetectorServiceProvider extends ServiceProvider
     {
         return $html . '<script>
             if (! localStorage.getItem("user_currency") || ! localStorage.getItem("user_language")) {
-                fetch("/geo-data-detector/detect", {
+                fetch("' . route('geo-data-detector.detect') . '", {
                         method: "GET",
                         headers: {
                             "Content-Type": "application/json",
