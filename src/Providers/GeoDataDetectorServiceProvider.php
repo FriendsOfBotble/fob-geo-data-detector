@@ -21,7 +21,7 @@ class GeoDataDetectorServiceProvider extends ServiceProvider
             ->publishAssets()
             ->loadRoutes();
 
-        $this->app->booted(function () {
+        $this->app->booted(function (): void {
             PanelSectionManager::beforeRendering(function (): void {
                 PanelSectionManager::default()
                     ->registerItem(
@@ -42,8 +42,19 @@ class GeoDataDetectorServiceProvider extends ServiceProvider
     public function injectScript(?string $html): string
     {
         return $html . '<script>
-            if (! localStorage.getItem("user_currency") || ! localStorage.getItem("user_language")) {
-                fetch("' . route('geo-data-detector.detect') . '", {
+            (function() {
+                const storedCurrency = localStorage.getItem("user_currency");
+                const storedLanguage = localStorage.getItem("user_language");
+
+                let url = "' . route('geo-data-detector.detect') . '";
+                if (storedCurrency || storedLanguage) {
+                    const params = new URLSearchParams();
+                    if (storedCurrency) params.append("stored_currency", storedCurrency);
+                    if (storedLanguage) params.append("stored_language", storedLanguage);
+                    url += "?" + params.toString();
+                }
+
+                fetch(url, {
                         method: "GET",
                         headers: {
                             "Content-Type": "application/json",
@@ -52,18 +63,37 @@ class GeoDataDetectorServiceProvider extends ServiceProvider
                     })
                     .then(response => response.json())
                     .then(response => {
-                        if (! response.error && response.data.detected) {
-                            localStorage.setItem("user_currency", response.data.currency || "USD");
-                            localStorage.setItem("user_language", response.data.language || "en");
+                        if (!response || response.error || !response.data) {
+                            return;
+                        }
+
+                        let shouldReload = false;
+
+                        if (response.data.detected) {
+                            const newCurrency = response.data.currency || "USD";
+                            const newLanguage = response.data.language || "en";
+
+                            if (storedCurrency !== newCurrency) {
+                                localStorage.setItem("user_currency", newCurrency);
+                                shouldReload = true;
+                            }
+                            if (storedLanguage !== newLanguage) {
+                                localStorage.setItem("user_language", newLanguage);
+                                shouldReload = true;
+                            }
+
                             if (response.data.next_url) {
                                 window.location.href = response.data.next_url;
-                            } else {
-                                window.location.reload();
+                                return;
                             }
+                        }
+
+                        if (shouldReload || response.data.session_restored) {
+                            window.location.reload();
                         }
                     })
                     .catch(error => console.error("GeoDataDetector API Error: ", error));
-            }
+            })();
         </script>';
     }
 }

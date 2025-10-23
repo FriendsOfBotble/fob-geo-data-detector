@@ -17,13 +17,57 @@ class GeoDataDetectorController extends SettingController
     public function detect(): BaseHttpResponse
     {
         if (AdminHelper::isInAdmin() || $this->isRequestFromBot()) {
-            return $this->httpResponse();
+            return $this->httpResponse()->setData(['data' => null]);
         }
 
         $apiKey = setting('fob_geo_data_detector_ipdata_api_key');
 
         if (! $apiKey) {
-            return $this->httpResponse();
+            return $this->httpResponse()->setData(['data' => null]);
+        }
+
+        $storedCurrency = request('stored_currency');
+        $storedLanguage = request('stored_language');
+        $sessionRestored = false;
+
+        if ($storedCurrency && ! session('currency') && setting('fob_geo_data_currency_detector_enabled')) {
+            if (function_exists('cms_currency')) {
+                $currencyData = get_application_currency();
+                if ($currencyData && isset($currencyData->currencies) && $currencyData->currencies) {
+                    $availableCurrencies = $currencyData->currencies->pluck('title')->all();
+                    if (in_array($storedCurrency, $availableCurrencies)) {
+                        session(['currency' => $storedCurrency]);
+                        $sessionRestored = true;
+                    }
+                }
+            }
+        }
+
+        if ($storedLanguage && ! session('language') && setting('fob_geo_data_language_detector_enabled')) {
+            if (in_array($storedLanguage, array_keys(Language::getAvailableLocales()))) {
+                session(['language' => $storedLanguage]);
+                $sessionRestored = true;
+            }
+        }
+
+        $currencyEnabled = setting('fob_geo_data_currency_detector_enabled');
+        $languageEnabled = setting('fob_geo_data_language_detector_enabled');
+
+        $shouldReturnEarly = $sessionRestored && (
+            ($currencyEnabled && $languageEnabled && session('currency') && session('language')) ||
+            ($currencyEnabled && ! $languageEnabled && session('currency')) ||
+            (! $currencyEnabled && $languageEnabled && session('language'))
+        );
+
+        if ($shouldReturnEarly) {
+            return $this
+                ->httpResponse()
+                ->setData([
+                    'detected' => false,
+                    'session_restored' => true,
+                    'currency' => session('currency'),
+                    'language' => session('language'),
+                ]);
         }
 
         $ip = request()->ip();
@@ -38,7 +82,12 @@ class GeoDataDetectorController extends SettingController
             }
 
             if (! $data) {
-                $data = Http::withoutVerifying()->timeout(5)->get($url)->json();
+                $response = Http::withoutVerifying()->timeout(5)->get($url);
+                $data = $response->json();
+
+                if (! $response->successful() || isset($data['error']) || ! is_array($data)) {
+                    return $this->httpResponse()->setData(['data' => null]);
+                }
             }
 
             session(['fob_geo_data' => $data]);
@@ -47,6 +96,7 @@ class GeoDataDetectorController extends SettingController
                 'detected' => false,
                 'currency' => null,
                 'language' => null,
+                'session_restored' => $sessionRestored,
             ];
 
             if (setting('fob_geo_data_currency_detector_enabled')) {
@@ -91,7 +141,7 @@ class GeoDataDetectorController extends SettingController
             BaseHelper::logError($exception);
         }
 
-        return $this->httpResponse();
+        return $this->httpResponse()->setData(['data' => null]);
     }
 
     protected function isRequestFromBot(): bool
