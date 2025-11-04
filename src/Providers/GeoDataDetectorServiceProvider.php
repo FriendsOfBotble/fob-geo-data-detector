@@ -45,6 +45,17 @@ class GeoDataDetectorServiceProvider extends ServiceProvider
             (function() {
                 const storedCurrency = localStorage.getItem("user_currency");
                 const storedLanguage = localStorage.getItem("user_language");
+                const reloadGuardKey = "geo_detector_reload_attempted";
+                const canUseSessionStorage = (() => {
+                    try {
+                        const testKey = "__geo_detector_test__";
+                        sessionStorage.setItem(testKey, "1");
+                        sessionStorage.removeItem(testKey);
+                        return true;
+                    } catch (error) {
+                        return false;
+                    }
+                })();
 
                 let url = "' . route('geo-data-detector.detect') . '";
                 if (storedCurrency || storedLanguage) {
@@ -88,7 +99,23 @@ class GeoDataDetectorServiceProvider extends ServiceProvider
                             }
                         }
 
-                        if (shouldReload || response.data.session_restored) {
+                        if (response.data.session_restored) {
+                            shouldReload = true;
+                        }
+
+                        let allowReload = shouldReload;
+
+                        if (canUseSessionStorage) {
+                            if (!allowReload) {
+                                sessionStorage.removeItem(reloadGuardKey);
+                            } else if (sessionStorage.getItem(reloadGuardKey) === "1") {
+                                allowReload = false;
+                            } else {
+                                sessionStorage.setItem(reloadGuardKey, "1");
+                            }
+                        }
+
+                        if (allowReload) {
                             window.location.reload();
                         }
                     })
